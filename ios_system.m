@@ -1115,6 +1115,10 @@ int ios_fchdir_nolock(const int fd) {
 }
 
 int chdir_nolock(const char* path) {
+    if(currentSession == NULL) {
+        [NSFileManager.defaultManager changeCurrentDirectoryPath:[NSString stringWithUTF8String:path]];
+        return 0;
+    }
     // NSLog(@"chdir_nolock: %s thread %x\n", path, pthread_self());
     // Same function as chdir, except it does not lock. To be called from ios_releaseThread*()
     NSFileManager *fileManager = [[NSFileManager alloc] init];
@@ -1140,7 +1144,7 @@ int chdir_nolock(const char* path) {
     // Allowed "cd" = below miniRoot *or* below localMiniRoot
     NSString* resultDir = [fileManager currentDirectoryPath];
 
-    if (__allowed_cd_to_path(resultDir)) {
+    if (__allowed_cd_to_path(resultDir) && currentSession != NULL) {
         strcpy(currentSession->currentDir, [resultDir UTF8String]);
         NSLog(@"allowed directory change, returning\n");
         errno = 0;
@@ -2005,9 +2009,10 @@ int ios_dup2(int fd1, int fd2)
         child_stdout = fdopen(fd1, "wb");
     } else if (fd2 == 2) {
         if ((child_stdout != NULL) && (fileno(child_stdout) == fd1)) child_stderr = child_stdout;
-        if ((child_stdout != NULL) && (fileno(thread_stdout) == fd1)) child_stderr = child_stdout;
+        if ((child_stdout != NULL) && (thread_stdout != NULL && fileno(thread_stdout) == fd1)) child_stderr = child_stdout;
         else if (fd1 == 1) {
             child_stderr = thread_stdout;
+            if (child_stderr == NULL)  child_stderr = child_stdout;
         } else child_stderr = fdopen(fd1, "wb");
     } else if (thread_stdin != NULL && fd2 == fileno(thread_stdin)) {
         child_stdin = fdopen(fd1, "rb");
@@ -3535,8 +3540,8 @@ int ios_system(const char* inputCmd) {
                 if ([commandName isEqualToString: @"dash"]) {
                     params->storeRootThread = false;
                 }
-                bool commandOperatesOnFiles = ([commandStructure[3] isEqualToString:@"file"] ||
-                                               [commandStructure[3] isEqualToString:@"directory"] ||
+                bool commandOperatesOnFiles = (/*[commandStructure[3] isEqualToString:@"file"] ||
+                                               [commandStructure[3] isEqualToString:@"directory"] ||*/
                                                params->isPipeOut || params->isPipeErr);
                 NSString* currentPath = [fileManager currentDirectoryPath];
                 commandOperatesOnFiles &= (currentPath != nil);
