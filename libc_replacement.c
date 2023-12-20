@@ -703,66 +703,66 @@ void warnc(int code, const char *fmt, ...) {
 
 
 
-
-
-#undef write
-#undef fwrite
-#undef read
-#undef fread
-static ssize_t (*origin_write)(int fildes, const void *buf, size_t nbyte) = NULL;
-static size_t (*origin_fwrite)(const void *restrict ptr, size_t size, size_t nitems, FILE *restrict stream) = NULL;
-
-static ssize_t (*origin_read)(int, void *, size_t) = NULL;
-static size_t  (*origin_fread)(void * __restrict __ptr, size_t __size, size_t __nitems, FILE * __restrict __stream) = NULL;
-
-__attribute__((visibility("default"))) __attribute__((used))
-ssize_t write(int fildes, const void *buf, size_t nbyte) {
-    if (origin_write == NULL) {
-        void* libsystem_b_handle = dlopen("/usr/lib/libSystem.B.dylib", RTLD_LAZY);
-        origin_write = dlsym(libsystem_b_handle, "write");
-    }
-    
-    if (thread_stdout == NULL) thread_stdout = stdout;
-    if (thread_stderr == NULL) thread_stderr = stderr;
-    if (fildes == STDOUT_FILENO) return origin_write(fileno(thread_stdout), buf, nbyte);
-    if (fildes == STDERR_FILENO) return origin_write(fileno(thread_stderr), buf, nbyte);
-    return origin_write(fildes, buf, nbyte);
-}
-
-__attribute__((visibility("default"))) __attribute__((used))
-size_t fwrite(const void *restrict ptr, size_t size, size_t nitems, FILE *restrict stream) {
-    if (origin_fwrite == NULL) {
-        void* libsystem_b_handle = dlopen("/usr/lib/libSystem.B.dylib", RTLD_LAZY);
-        origin_fwrite = dlsym(libsystem_b_handle, "fwrite");
-    }
-    if (thread_stdout == NULL) thread_stdout = stdout;
-    if (thread_stderr == NULL) thread_stderr = stderr;
-    if (fileno(stream) == STDOUT_FILENO) return origin_fwrite(ptr, size, nitems, thread_stdout);
-    // iOS, debug:
-    if (fileno(stream) == STDERR_FILENO) return origin_fwrite(ptr, size, nitems, thread_stderr);
-    return origin_fwrite(ptr, size, nitems, stream);
-}
-
-__attribute__((visibility("default"))) __attribute__((used))
-ssize_t read(int fildes, void *buf, size_t nbyte) {
-    if (origin_read == NULL) {
-        void* libsystem_b_handle = dlopen("/usr/lib/libSystem.B.dylib", RTLD_LAZY);
-        origin_read = dlsym(libsystem_b_handle, "read");
-    }
-    
-    if (thread_stdin == NULL) thread_stdin = stdin;
-    if (fildes == STDIN_FILENO) return origin_read(fileno(thread_stdout), buf, nbyte);
-    return origin_read(fildes, buf, nbyte);
-}
-
-__attribute__((visibility("default"))) __attribute__((used))
-size_t fread(void * __restrict ptr, size_t size, size_t nitems, FILE * __restrict stream) {
-    if (origin_fread == NULL) {
-        void* libsystem_b_handle = dlopen("/usr/lib/libSystem.B.dylib", RTLD_LAZY);
-        origin_fread = dlsym(libsystem_b_handle, "fread");
-    }
-    
-    if (thread_stdin == NULL) thread_stdin = stdin;
-    if (fileno(stream) == STDIN_FILENO) return origin_fread(ptr, size, nitems, thread_stdin);
-    return origin_fread(ptr, size, nitems, stream);
-}
+//
+//
+//#undef write
+//#undef fwrite
+//#undef read
+//#undef fread
+//static ssize_t (*origin_write)(int fildes, const void *buf, size_t nbyte) = NULL;
+//static size_t (*origin_fwrite)(const void *restrict ptr, size_t size, size_t nitems, FILE *restrict stream) = NULL;
+//
+//static ssize_t (*origin_read)(int, void *, size_t) = NULL;
+//static size_t  (*origin_fread)(void * __restrict __ptr, size_t __size, size_t __nitems, FILE * __restrict __stream) = NULL;
+//
+//__attribute__((visibility("default"))) __attribute__((used))
+//ssize_t write(int fildes, const void *buf, size_t nbyte) {
+//    if (origin_write == NULL) {
+//        void* libsystem_b_handle = dlopen("/usr/lib/libSystem.B.dylib", RTLD_LAZY);
+//        origin_write = dlsym(libsystem_b_handle, "write");
+//    }
+//    
+//    if (thread_stdout == NULL) thread_stdout = stdout;
+//    if (thread_stderr == NULL) thread_stderr = stderr;
+//    if (fildes == STDOUT_FILENO) return origin_write(fileno(thread_stdout), buf, nbyte);
+//    if (fildes == STDERR_FILENO) return origin_write(fileno(thread_stderr), buf, nbyte);
+//    return origin_write(fildes, buf, nbyte);
+//}
+//
+//__attribute__((visibility("default"))) __attribute__((used))
+//size_t fwrite(const void *restrict ptr, size_t size, size_t nitems, FILE *restrict stream) {
+//    if (origin_fwrite == NULL) {
+//        void* libsystem_b_handle = dlopen("/usr/lib/libSystem.B.dylib", RTLD_LAZY);
+//        origin_fwrite = dlsym(libsystem_b_handle, "fwrite");
+//    }
+//    if (thread_stdout == NULL) thread_stdout = stdout;
+//    if (thread_stderr == NULL) thread_stderr = stderr;
+//    if (fileno(stream) == STDOUT_FILENO) return origin_fwrite(ptr, size, nitems, thread_stdout);
+//    // iOS, debug:
+//    if (fileno(stream) == STDERR_FILENO) return origin_fwrite(ptr, size, nitems, thread_stderr);
+//    return origin_fwrite(ptr, size, nitems, stream);
+//}
+//
+//__attribute__((visibility("default"))) __attribute__((used))
+//ssize_t read(int fildes, void *buf, size_t nbyte) {
+//    if (origin_read == NULL) {
+//        void* libsystem_b_handle = dlopen("/usr/lib/libSystem.B.dylib", RTLD_LAZY);
+//        origin_read = dlsym(libsystem_b_handle, "read");
+//    }
+//    
+//    if (thread_stdin == NULL) thread_stdin = stdin;
+//    if (fildes == STDIN_FILENO) return origin_read(fileno(thread_stdout), buf, nbyte);
+//    return origin_read(fildes, buf, nbyte);
+//}
+//
+//__attribute__((visibility("default"))) __attribute__((used))
+//size_t fread(void * __restrict ptr, size_t size, size_t nitems, FILE * __restrict stream) {
+//    if (origin_fread == NULL) {
+//        void* libsystem_b_handle = dlopen("/usr/lib/libSystem.B.dylib", RTLD_LAZY);
+//        origin_fread = dlsym(libsystem_b_handle, "fread");
+//    }
+//    
+//    if (thread_stdin == NULL) thread_stdin = stdin;
+//    if (fileno(stream) == STDIN_FILENO) return origin_fread(ptr, size, nitems, thread_stdin);
+//    return origin_fread(ptr, size, nitems, stream);
+//}

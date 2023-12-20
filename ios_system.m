@@ -1141,7 +1141,9 @@ int chdir_nolock(const char* path) {
     NSString* resultDir = [fileManager currentDirectoryPath];
 
     if (__allowed_cd_to_path(resultDir)) {
-        strcpy(currentSession->currentDir, [resultDir UTF8String]);
+        if (currentSession) {
+            strcpy(currentSession->currentDir, [resultDir UTF8String]);
+        }
         NSLog(@"allowed directory change, returning\n");
         errno = 0;
         return 0;
@@ -2056,21 +2058,23 @@ int ios_kill()
 {
     if (currentSession == NULL) return ESRCH;
     if (currentSession->current_command_root_thread > 0) {
-        struct sigaction query_action;
-        if ((sigaction (SIGINT, NULL, &query_action) >= 0) &&
-            (query_action.sa_handler != SIG_DFL) &&
-            (query_action.sa_handler != SIG_IGN)) {
-            /* A programmer-defined signal handler is in effect. */
-            // This might be problematic with multiple commands running at the same time that all define SIGINT
-            // ...such as ls.
-            // !! this is called from the main thread. So make sure the signal handler does *not* call phtread_exit();
-            query_action.sa_handler(SIGINT);
-            // kill(getpid(), SIGINT); // infinite loop?
-        } else {
+//        struct sigaction query_action;
+//        if ((sigaction (SIGINT, NULL, &query_action) >= 0) &&
+//            (query_action.sa_handler != SIG_DFL) &&
+//            (query_action.sa_handler != SIG_IGN)) {
+//            /* A programmer-defined signal handler is in effect. */
+//            // This might be problematic with multiple commands running at the same time that all define SIGINT
+//            // ...such as ls.
+//            // !! this is called from the main thread. So make sure the signal handler does *not* call phtread_exit();
+//            query_action.sa_handler(SIGINT);
+//            // kill(getpid(), SIGINT); // infinite loop?
+//        } else {
             // Send pthread_cancel with the given signal to the current main thread, if there is one.
+        kill(currentSession->current_command_root_thread, SIGINT);
+    
             if (currentSession->current_command_root_thread != NULL)
                 return pthread_cancel(currentSession->current_command_root_thread);
-        }
+//        }
     }
     // No process running
     return ESRCH;
@@ -2475,6 +2479,7 @@ static char* unquoteArgument(char* argument) {
 
 
 static int isRealCommand(const char* fileName) {
+    return false;
     // File exists, is executable, not a directory.
     // We check whether: a) its size is > 0 and b) it is not a Mach-O binary
     int returnValue = false;
@@ -3548,7 +3553,7 @@ int ios_system(const char* inputCmd) {
                     // Send a signal to the system that we're going to change the current directory:
                     NSURL* currentURL = [NSURL fileURLWithPath:currentPath];
                     NSFileCoordinator *fileCoordinator =  [[NSFileCoordinator alloc] initWithFilePresenter:nil];
-                    [fileCoordinator coordinateWritingItemAtURL:currentURL options:0 error:NULL byAccessor:^(NSURL *currentURL) {
+//                    [fileCoordinator coordinateWritingItemAtURL:currentURL options:0 error:NULL byAccessor:^(NSURL *currentURL) {
                         currentSession->isMainThread = false;
                         volatile pthread_t _tid = NULL;
                         pthread_create(&_tid, NULL, run_function, params);
@@ -3566,7 +3571,7 @@ int ios_system(const char* inputCmd) {
 							pthread_detach(_tid); // a thread must be either joined or detached
 						}
                         currentSession->isMainThread = true;
-                    }];
+//                    }];
                 } else {
                     currentSession->isMainThread = false;
                     volatile pthread_t _tid = NULL;
