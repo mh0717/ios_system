@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2209215C24B3B05A00D3327B /* open.m in Sources */ = {isa = PBXBuildFile; fileRef = 221CD98D21E8B03D00F3B47C /* open.m */; };
 		22122E2C21BC130700D8FE74 /* say.m in Sources */ = {isa = PBXBuildFile; fileRef = 22122E2A21BC129000D8FE74 /* say.m */; };
 		2217ECD421CBA5F40049B382 /* entropy.c in Sources */ = {isa = PBXBuildFile; fileRef = 2217ECD321CBA5F40049B382 /* entropy.c */; };
 		2217ECD621CBA6240049B382 /* openssl-compat.c in Sources */ = {isa = PBXBuildFile; fileRef = 2217ECD521CBA6240049B382 /* openssl-compat.c */; };
@@ -2764,7 +2763,6 @@
 				225F06102016751900466685 /* getopt_long.c in Sources */,
 				22D99CED25AB76BF007F56C9 /* libc_replacement.c in Sources */,
 				223496B71FD5FC89007ED1A9 /* ios_system.m in Sources */,
-				2209215C24B3B05A00D3327B /* open.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

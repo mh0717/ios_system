@@ -63,3 +63,4 @@ xcuserdata/
 .build
 .DS_Store
 .swiftpm
+build

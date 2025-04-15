@@ -5,7 +5,13 @@
 //  Copyright © 2017 N. Holzschuch. All rights reserved.
 //
 
+#import <TargetConditionals.h>
+
+#if TARGET_OS_IOS
 #import <UIKit/UIKit.h>
+#else
+#import <AppKit/AppKit.h>
+#endif
 
 #include "ios_system.h"
 
@@ -41,7 +47,10 @@ static NSString* ios_bookmarkDictionaryName = @"bookmarkNames";
 // Include file for getrlimit/setrlimit:
 #include <sys/resource.h>
 static struct rlimit limitFilesOpen;
-extern void display_alert(NSString* title, NSString* message);
+extern /*void display_alert(NSString* title, NSString* message);*/
+void display_alert(NSString* title, NSString* message) {
+    printf("%s\n%s\n", title.UTF8String, message.UTF8String);
+}
 
 
 extern __thread int    __db_getopt_reset;
@@ -96,6 +105,9 @@ static void initSessionParameters(sessionParameters* sp) {
     sp->lastThreadId = 0;
     sp->mainThreadId = 0;
     NSString* currentDirectory = [fileManager currentDirectoryPath];
+    if (currentDirectory == nil) {
+        currentDirectory = [[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) lastObject] stringByDeletingLastPathComponent];
+    }
     strcpy(sp->currentDir, [currentDirectory UTF8String]);
     strcpy(sp->previousDirectory, [currentDirectory UTF8String]);
     sp->localMiniRoot[0] = 0;
@@ -1485,6 +1497,7 @@ static char* concatenateArgv(char* const argv[]) {
 }
 
 int pbpaste(int argc, char** argv) {
+#if TARGET_OS_IOS
     if (argc == 1) {
         // We can paste strings and URLs.
         if ([UIPasteboard generalPasteboard].hasStrings) {
@@ -1499,6 +1512,7 @@ int pbpaste(int argc, char** argv) {
     } else {
         fprintf(thread_stderr, "Usage: pbpaste\nPastes the content of the copy buffer (strings or urls).");
     }
+#endif
     return 1;
 }
 
@@ -1521,7 +1535,11 @@ int pbcopy(int argc, char** argv) {
             return 1;
         }
         
+#if TARGET_OS_IOS
         [UIPasteboard generalPasteboard].string = result;
+#else
+        [[NSPasteboard generalPasteboard] setString:result forType: NSStringPboardType];
+#endif
     } else {
         if ((argv[1][0] == '-') && ((strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "--help") == 0))) {
             fprintf(thread_stderr, "Usage: pbcopy arguments\ncommand > pbcopy\nCopies either its arguments or input to the copy buffer.");
@@ -1529,7 +1547,11 @@ int pbcopy(int argc, char** argv) {
         }
         // threre are arguments, concatenate and paste:
         char* cmd = concatenateArgv(argv + 1);
+#if TARGET_OS_IOS
         [UIPasteboard generalPasteboard].string = @(cmd);
+#else
+        [[NSPasteboard generalPasteboard] setString:@(cmd) forType: NSStringPboardType];
+#endif
         free(cmd);
     }
     return 0;
@@ -2479,7 +2501,9 @@ static char* unquoteArgument(char* argument) {
 
 
 static int isRealCommand(const char* fileName) {
-    return false;
+    if (strcmp(fileName, "/bin/sh") == 0) {
+        return false;
+    }
     // File exists, is executable, not a directory.
     // We check whether: a) its size is > 0 and b) it is not a Mach-O binary
     int returnValue = false;

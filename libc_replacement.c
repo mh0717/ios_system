@@ -27,6 +27,7 @@
 #undef getenv
 #undef setenv
 #undef unsetenv
+#undef putenv
 
 // in order to run webAssembly commands sequentially, we first stack them, then run them in command line order:
 // At this point, this could just be a mutex.
@@ -569,6 +570,7 @@ __attribute__ ((optnone)) void ios_waitpid(pid_t pid) {
     while (threadToWaitFor != 0) {
         // -1: not started, >0 started, not finished, 0: finished
         threadToWaitFor = ios_getThreadId(pid);
+        usleep(1000 * 10);
     }
     // fprintf(stderr, "Returning from ios_waitpid for %d \n", pid);
     return;
